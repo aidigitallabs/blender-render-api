@@ -1,21 +1,23 @@
 #!/usr/bin/env python3
-"""Client for blender-render-api (stdlib only).  env: BLENDER_API_URL, BLENDER_API_KEY
+"""Client for blender-render-api (stdlib only).  env: BLENDER_API_URL, BLENDER_API_KEY, BLENDER_API_BASIC (user:pass, if the proxy adds HTTP Basic Auth)
   blender_api.py health | gpu | projects | jobs
   blender_api.py push <dir> <project> [--replace] [--exclude pat ...]
   blender_api.py run <project> [--no-wait] -- <cmd...>          e.g. -- blender -b --factory-startup -P build_scene.py
   blender_api.py job <id> [--tail 40] | log <id> | kill <id>
   blender_api.py pull <project> <glob> <outdir>                e.g. pull home-alone-v3 'clip_frames/*.png' ./frames
 """
-import fnmatch, io, json, os, sys, time, uuid, zipfile, urllib.request as u
+import base64, fnmatch, io, json, os, sys, time, uuid, zipfile, urllib.request as u
 
 URL = os.environ.get("BLENDER_API_URL", "http://127.0.0.1:8800").rstrip("/")
 KEY = os.environ.get("BLENDER_API_KEY", "")
+BASIC = os.environ.get("BLENDER_API_BASIC", "")  # "user:pass" for a reverse proxy with Basic Auth
+HEADERS = {"X-Api-Key": KEY, **({"Authorization": "Basic " + base64.b64encode(BASIC.encode()).decode()} if BASIC else {})}
 EXCL = ["__pycache__", "*.pyc", "*.blend1", "_jobs", "*.log", "*.mp4", "clip_frames*", "frames", "test", "refs", ".git"]
 
 
 def req(method, path, data=None, ctype="application/json", raw=False):
     body = None if data is None else (data if isinstance(data, bytes) else json.dumps(data).encode())
-    r = u.Request(URL + path, data=body, method=method, headers={"X-Api-Key": KEY, "Content-Type": ctype})
+    r = u.Request(URL + path, data=body, method=method, headers={**HEADERS, "Content-Type": ctype})
     with u.urlopen(r, timeout=600) as resp:
         return resp.read() if raw else json.loads(resp.read() or b"null")
 

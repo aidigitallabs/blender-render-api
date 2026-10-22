@@ -35,7 +35,7 @@ A prebuilt copy is also published at `ghcr.io/aidigitallabs/blender-render-api:l
 ## API
 See the docstring at the top of `api/server.py`. Typical flow with `client/blender_api.py`:
 ```
-export BLENDER_API_URL=http://host:8800 BLENDER_API_KEY=...
+export BLENDER_API_URL=https://host BLENDER_API_KEY=...   # plus BLENDER_API_BASIC=user:pass if the proxy uses Basic Auth
 python client/blender_api.py push ./home-alone-v3 home-alone-v3 --replace
 python client/blender_api.py run home-alone-v3 -- python gen_textures.py
 python client/blender_api.py run home-alone-v3 -- blender -b --factory-startup -P build_scene.py

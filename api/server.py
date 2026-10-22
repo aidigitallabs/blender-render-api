@@ -62,6 +62,15 @@ def safe_rel(base: Path, rel: str) -> Path:
     return p
 
 
+def safe_glob(base: Path, pattern: str):
+    """files matching pattern, strictly under base (no '..', no absolute, symlinks resolved)"""
+    if pattern.startswith("/") or ".." in pattern.replace("\\", "/").split("/"):
+        raise HTTPException(400, "bad glob")
+    for p in sorted(base.glob(pattern)):
+        if p.is_file() and base in p.resolve().parents:
+            yield p
+
+
 def save_jobs():
     tmp = STATE.with_suffix(".tmp")
     tmp.write_text(json.dumps(JOBS, indent=1))
@@ -158,11 +167,7 @@ def delete_project(name: str):
 @app.get("/projects/{name}/files")
 def list_files(name: str, glob: str = "**/*"):
     base = project_dir(name)
-    out = []
-    for p in sorted(base.glob(glob)):
-        if p.is_file():
-            out.append({"path": p.relative_to(base).as_posix(), "size": p.stat().st_size})
-    return out
+    return [{"path": p.relative_to(base).as_posix(), "size": p.stat().st_size} for p in safe_glob(base, glob)]
 
 
 @app.get("/projects/{name}/file/{path:path}")
@@ -178,9 +183,8 @@ def get_zip(name: str, glob: str = "**/*.png"):
     base = project_dir(name)
     tmp = tempfile.NamedTemporaryFile(dir=WORK, suffix=".zip", delete=False)
     with zipfile.ZipFile(tmp, "w", zipfile.ZIP_STORED) as z:
-        for p in sorted(base.glob(glob)):
-            if p.is_file():
-                z.write(p, p.relative_to(base).as_posix())
+        for p in safe_glob(base, glob):
+            z.write(p, p.relative_to(base).as_posix())
     tmp.close()
     return FileResponse(tmp.name, filename=f"{name}.zip", background=BackgroundTask(os.remove, tmp.name))
 

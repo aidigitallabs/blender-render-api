@@ -5,12 +5,19 @@ lent to someone without handing out a login: the owner runs one container and sh
 
 ## Run it (GPU box)
 ```
+git clone https://github.com/aidigitallabs/blender-render-api && cd blender-render-api
+cp .env.example .env && echo "API_KEY=$(openssl rand -hex 24)" > .env
+docker compose up -d
+curl -H "X-Api-Key: $(cut -d= -f2 .env)" http://127.0.0.1:8800/health
+```
+Or without compose:
+```
 docker run -d --name blender-api --restart unless-stopped --gpus all \
   -e API_KEY='change-me-to-something-long' -p 8800:8800 -v blender-work:/work \
   ghcr.io/aidigitallabs/blender-render-api:latest
-curl -H 'X-Api-Key: change-me-to-something-long' http://127.0.0.1:8800/health
 ```
-Needs the NVIDIA driver and the NVIDIA Container Toolkit (`--gpus all`). Without a GPU it still works, on CPU.
+Needs the NVIDIA driver and the NVIDIA Container Toolkit. Without a GPU it still works, on CPU.
+To build the image yourself instead of pulling it, uncomment `build: .` in `docker-compose.yml`.
 
 ## What is in the image
 - `ubuntu:24.04`, the official Blender tarball from blender.org (sha256 pinned in the Dockerfile), ffmpeg, a Python venv with

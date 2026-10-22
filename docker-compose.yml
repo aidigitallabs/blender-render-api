@@ -1,0 +1,22 @@
+services:
+  blender-api:
+    image: ghcr.io/aidigitallabs/blender-render-api:latest
+    # build: .            # uncomment to build from this repo instead of pulling the image
+    container_name: blender-api
+    restart: unless-stopped
+    ports:
+      - "8800:8800"       # keep this on a VPN/Tailscale or behind a TLS reverse proxy, not the open internet
+    environment:
+      API_KEY: ${API_KEY:?set API_KEY in .env (16+ chars)}
+    volumes:
+      - blender-work:/work
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+volumes:
+  blender-work:

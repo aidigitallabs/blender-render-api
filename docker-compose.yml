@@ -1,7 +1,8 @@
 services:
   blender-api:
-    image: ghcr.io/aidigitallabs/blender-render-api:latest
-    # build: .            # uncomment to build from this repo instead of pulling the image
+    build: .                        # builds from the Dockerfile in this repo (Blender tarball from blender.org, sha256 pinned)
+    image: blender-render-api:local
+    # image: ghcr.io/aidigitallabs/blender-render-api:latest   # alternative: pull the prebuilt image instead of building
     container_name: blender-api
     restart: unless-stopped
     ports:

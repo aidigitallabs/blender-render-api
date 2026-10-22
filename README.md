@@ -18,7 +18,7 @@ Or without compose:
 docker build -t blender-render-api .
 docker run -d --name blender-api --restart unless-stopped --gpus all   -e API_KEY='change-me-to-something-long' -p 8800:8800 -v blender-work:/work blender-render-api
 ```
-Needs the NVIDIA driver and the NVIDIA Container Toolkit. Without a GPU it still works, on CPU.
+Needs the NVIDIA driver and the NVIDIA Container Toolkit. Without a GPU it still works, on CPU: delete the `deploy:` block from the compose file (or drop `--gpus all`).
 A prebuilt copy is also published at `ghcr.io/aidigitallabs/blender-render-api:latest` if you would rather pull than build.
 
 ## What is in the image
